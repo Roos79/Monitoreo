@@ -1,24 +1,24 @@
 {
-  "timestamp": "2026-06-15T09:39:42",
-  "cpu_porcentaje": 61.2,
+  "timestamp": "2026-06-15T14:07:40",
+  "cpu_porcentaje": 8.2,
   "particiones": [
     {
       "dispositivo": "C:\\",
       "punto_montaje": "C:\\",
       "tipo": "NTFS",
       "total_gb": 218.91,
-      "usado_gb": 185.06,
-      "libre_gb": 33.85,
-      "porcentaje": 84.54
+      "usado_gb": 186.34,
+      "libre_gb": 32.57,
+      "porcentaje": 85.12
     },
     {
       "dispositivo": "G:\\",
       "punto_montaje": "G:\\",
       "tipo": "FAT32",
       "total_gb": 15.0,
-      "usado_gb": 6.66,
-      "libre_gb": 8.34,
-      "porcentaje": 44.41
+      "usado_gb": 6.72,
+      "libre_gb": 8.28,
+      "porcentaje": 44.82
     }
   ]
 }

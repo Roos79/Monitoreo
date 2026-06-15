@@ -1,15 +1,15 @@
 {
-  "timestamp": "2026-06-15T09:39:43",
+  "timestamp": "2026-06-15T14:07:40",
   "memoria": {
     "total_gb": 7.73,
-    "usada_gb": 6.61,
-    "disponible_gb": 1.12,
-    "porcentaje": 85.5
+    "usada_gb": 6.23,
+    "disponible_gb": 1.5,
+    "porcentaje": 80.5
   },
   "swap": {
-    "total_gb": 11.92,
-    "usada_gb": 2.0,
-    "libre_gb": 9.92,
-    "porcentaje": 16.7
+    "total_gb": 12.41,
+    "usada_gb": 2.81,
+    "libre_gb": 9.6,
+    "porcentaje": 22.6
   }
 }
