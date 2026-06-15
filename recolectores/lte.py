@@ -1,23 +1,30 @@
 import argparse
+import os
 import re
 from pathlib import Path
+from collections import deque
 
-UMBRAL_TPS = 520
+UMBRAL_TPS = 570
 MAX_TRANSACCIONES = 10
 PATRON_LINEA = re.compile(r"^(?P<timestamp>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\s*->\s*\[(?P<valor>\d+)\]\s*$")
 
 
 def leer_transacciones(ruta):
-    """Lee las últimas 10 transacciones del archivo de TPS."""
+    """Lee de forma ultra ligera únicamente las últimas líneas del archivo de TPS."""
     archivo = Path(ruta)
     if not archivo.exists():
         raise FileNotFoundError(f"No se encontró el archivo: {ruta}")
 
+    # Optimización de memoria RAM usando deque
+    ultimas_lineas = deque(maxlen=MAX_TRANSACCIONES * 2)
+
     with open(archivo, "r", encoding="utf-8", errors="ignore") as fh:
-        lineas = [linea.strip() for linea in fh if linea.strip()]
+        for linea in fh:
+            if linea.strip():
+                ultimas_lineas.append(linea.strip())
 
     transacciones = []
-    for linea in lineas[-MAX_TRANSACCIONES:]:
+    for linea in list(ultimas_lineas)[-MAX_TRANSACCIONES:]:
         coincidencia = PATRON_LINEA.match(linea)
         if not coincidencia:
             continue
@@ -51,7 +58,8 @@ def main():
     parser = argparse.ArgumentParser(description="Monitoreo de transacciones LTE desde tpscontrol")
     parser.add_argument(
         "--ruta",
-        default="/opt/eir/var/tps/tpscontrol",
+        # Cambiado para soportar variables de entorno en producción si fuera necesario
+        default=os.getenv("MONITOREO_LTE_PATH", "/opt/eir/var/tps/tpscontrol"),
         help="Ruta del archivo de transacciones a monitorear.",
     )
     args = parser.parse_args()
@@ -74,7 +82,7 @@ def main():
         for item in resultado['alertas']:
             print(f"  - {item['timestamp']} -> [{item['valor']}]")
     else:
-        print("\nSin alertas: ninguna transacción superó el umbral de 520.")
+        print(f"\nSin alertas: ninguna transacción superó el umbral de {resultado['umbral']}.")
 
     if resultado['pico_maximo']:
         print(

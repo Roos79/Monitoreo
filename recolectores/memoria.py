@@ -1,11 +1,10 @@
 import json
 import os
 from datetime import datetime
-
 import psutil
 
-OUTPUT_DIR = os.path.join("reporte", "output")
-
+# Consistencia en la ruta absoluta de reportes
+OUTPUT_DIR = "/opt/eir/reportes/output"
 
 def capturar_memoria():
     """Recoge el consumo de RAM y memoria virtual del servidor."""
@@ -28,15 +27,23 @@ def capturar_memoria():
         },
     }
 
-
 def guardar_reporte_memoria(ruta=None):
     """Guarda el consumo de memoria en un archivo JSON."""
-    os.makedirs(OUTPUT_DIR, exist_ok=True)
+    try:
+        os.makedirs(OUTPUT_DIR, exist_ok=True)
+    except PermissionError:
+        print(f"Error: No hay permisos para crear el directorio {OUTPUT_DIR}")
+        return None
+
     if ruta is None:
         ruta = os.path.join(OUTPUT_DIR, "memoria_monitor.json")
 
     datos = capturar_memoria()
-    with open(ruta, "w", encoding="utf-8") as archivo:
-        json.dump(datos, archivo, indent=2, ensure_ascii=False)
+    try:
+        with open(ruta, "w", encoding="utf-8") as archivo:
+            json.dump(datos, archivo, indent=2, ensure_ascii=False)
+    except PermissionError:
+        print(f"Error: No hay permisos para escribir en {ruta}")
+        return None
 
     return {"ruta": ruta, "datos": datos}

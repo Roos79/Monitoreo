@@ -2,23 +2,30 @@ import argparse
 import os
 import re
 from pathlib import Path
+from collections import deque
 
-UMBRAL_TPS = 550
+UMBRAL_TPS = 4000
 MAX_TRANSACCIONES = 10
 PATRON_LINEA = re.compile(r"^(?P<timestamp>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\s*->\s*\[(?P<valor>\d+)\]\s*$")
 
 
 def leer_transacciones(ruta):
-    """ESTADO TPS LTE deben estar en un rango de 200 a 500."""
+    """Lee de forma ultra ligera únicamente las últimas líneas del archivo de TPS."""
     archivo = Path(ruta)
     if not archivo.exists():
         raise FileNotFoundError(f"No se encontró el archivo: {ruta}")
 
+    # collections.deque con maxlen optimiza la RAM: solo retiene las últimas N líneas en memoria
+    ultimas_lineas = deque(maxlen=MAX_TRANSACCIONES * 2)  # Margen por si hay líneas vacías
+
     with open(archivo, "r", encoding="utf-8", errors="ignore") as fh:
-        lineas = [linea.strip() for linea in fh if linea.strip()]
+        for linea in fh:
+            if linea.strip():
+                ultimas_lineas.append(linea.strip())
 
     transacciones = []
-    for linea in lineas[-MAX_TRANSACCIONES:]:
+    # Procesamos solo el bloque final que guardamos en la cola
+    for linea in list(ultimas_lineas)[-MAX_TRANSACCIONES:]:
         coincidencia = PATRON_LINEA.match(linea)
         if not coincidencia:
             continue
@@ -35,7 +42,7 @@ def leer_transacciones(ruta):
 
 
 def analizar_transacciones(transacciones, umbral=UMBRAL_TPS):
-    """ Picos por encima del umbral."""
+    """Analiza las transacciones y detecta picos por encima del umbral."""
     alertas = [item for item in transacciones if item["valor"] > umbral]
     pico_maximo = max(transacciones, key=lambda item: item["valor"]) if transacciones else None
 
@@ -47,9 +54,9 @@ def analizar_transacciones(transacciones, umbral=UMBRAL_TPS):
         "hay_picos": bool(alertas),
     }
 
-""
+
 def main():
-    parser = argparse.ArgumentParser(description="Monitoreo de transacciones GSM ")
+    parser = argparse.ArgumentParser(description="Monitoreo de transacciones GSM")
     parser.add_argument(
         "--ruta",
         default=os.getenv("MONITOREO_GSM_PATH", "/opt/eir/var/stats/su2-tps-eir_stats"),
@@ -75,7 +82,8 @@ def main():
         for item in resultado['alertas']:
             print(f"  - {item['timestamp']} -> [{item['valor']}]")
     else:
-        print("\nSin alertas: ninguna transacción superó el umbral de 520.")
+        # Corregido: Ahora muestra el umbral real dinámicamente
+        print(f"\nSin alertas: ninguna transacción superó el umbral de {resultado['umbral']}.")
 
     if resultado['pico_maximo']:
         print(
